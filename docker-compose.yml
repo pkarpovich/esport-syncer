@@ -1,0 +1,13 @@
+services:
+  esport-syncer:
+    build: .
+    container_name: esport-syncer
+    restart: unless-stopped
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      TEAM_ID: ${TEAM_ID}
+      CALENDAR_NAME: ${CALENDAR_NAME}
+      CALENDAR_COLOR: ${CALENDAR_COLOR}
+      CALENDAR_REFRESH_INTERVAL: ${CALENDAR_REFRESH_INTERVAL}
+      PORT: ${PORT}
