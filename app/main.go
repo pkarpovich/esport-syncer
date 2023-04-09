@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-co-op/gocron"
 	. "github.com/pkarpovich/esport-syncer/app/providers"
 	"log"
 	"net/http"
@@ -75,6 +76,8 @@ func matchToCalendarEvent(match Match) CalendarEvent {
 }
 
 func main() {
+	s := gocron.NewScheduler(time.UTC)
+
 	ctx := Context{
 		Provider: &DotaProvider{TeamID: GetEnvOrDefault("TEAM_ID", TeamSpiritId)},
 		Calendar: Calendar{
@@ -83,15 +86,26 @@ func main() {
 			RefreshInterval: GetEnvOrDefault("CALENDAR_REFRESH_INTERVAL", DefaultRefreshInterval),
 		},
 	}
-	ctx.UpdateMatches()
-	ctx.InitCalendarEvents()
+
+	_, err := s.Cron("0 0 * * *").StartImmediately().Do(func() {
+		log.Printf("cron job started")
+		ctx.UpdateMatches()
+		ctx.InitCalendarEvents()
+
+		_, nextRun := s.NextRun()
+		log.Printf("cron job finished, next run at %s", nextRun.UTC())
+	})
+	if err != nil {
+		log.Fatalf("error while creating cron job: %v", err)
+	}
+	s.StartAsync()
 
 	http.HandleFunc("/calendar.ics", ctx.ServeCalendar)
 
 	port := GetEnvOrDefault("PORT", DefaultPort)
 
 	log.Printf("Calendar published at http://localhost:%s/calendar.ics\n", port)
-	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+	err = http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	if err != nil {
 		log.Fatalf("error while starting server : %v", err)
 	}
