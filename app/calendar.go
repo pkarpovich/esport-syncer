@@ -6,6 +6,7 @@ import (
 )
 
 type CalendarEvent struct {
+	Id          string
 	Summary     string
 	Description string
 	Location    string
@@ -18,13 +19,14 @@ type Calendar struct {
 	calendar *iCal.Calendar
 }
 
-func (c *Calendar) CreateCalendar() {
+func (c *Calendar) CreateCalendar(name string) {
 	c.calendar = iCal.NewCalendar()
-	c.calendar.SetMethod(iCal.MethodRequest)
+	c.calendar.SetMethod(iCal.MethodPublish)
+	c.calendar.SetName(name)
 }
 
 func (c *Calendar) CreateEvent(event CalendarEvent) {
-	e := c.calendar.AddEvent("SUMMARY:Test Event")
+	e := c.calendar.AddEvent(event.Id)
 
 	e.SetCreatedTime(time.Now())
 	e.SetStartAt(event.StartAt)

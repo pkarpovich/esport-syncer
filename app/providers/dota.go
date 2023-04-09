@@ -65,6 +65,7 @@ func parseMatchesHTML(htmlResponse string) (error, []Match) {
 	doc.Find("tr.m-item[data-bm='gg']").Each(func(i int, s *goquery.Selection) {
 		match := Match{}
 
+		match.Id = s.AttrOr("data-id", string(time.Now().Unix()))
 		matchTimeStr := s.Find("td.tdate time").AttrOr("data-time", "")
 		match.Time, err = time.Parse("2006-01-02 15:04:05", matchTimeStr)
 		if err != nil {
