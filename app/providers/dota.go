@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const ProviderUrl = "https://ggscore.com"
+
 type DotaProvider struct {
 	TeamID string
 }
@@ -37,7 +39,7 @@ func fetchMatchesHTML(teamId string) (error, string) {
 		"game":     {"dota-2"},
 	}
 
-	req, err := http.PostForm("https://ggscore.com/en/dota-2", form)
+	req, err := http.PostForm(fmt.Sprintf("%s/en/dota-2", ProviderUrl), form)
 
 	if err != nil {
 		return fmt.Errorf("error while sending request: %w", err), ""
@@ -73,6 +75,9 @@ func parseMatchesHTML(htmlResponse string) (error, []Match) {
 			match.IsLive = true
 		}
 
+		URL, _ := s.Attr("data-href")
+
+		match.URL = fmt.Sprintf("%s%s", ProviderUrl, URL)
 		match.Tournament, _ = s.Find("td.tname a.tour-pop").Attr("title")
 		match.Score = s.AttrOr("data-score", "N/A")
 		match.Team1 = s.Find("span.tn1").Text()

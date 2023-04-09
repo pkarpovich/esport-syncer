@@ -9,6 +9,8 @@ type Match struct {
 	Team2      string
 	Score      string
 	Time       time.Time
+	Location   string
+	URL        string
 	IsLive     bool
 }
 

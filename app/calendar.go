@@ -2,6 +2,7 @@ package main
 
 import (
 	iCal "github.com/arran4/golang-ical"
+	"log"
 	"time"
 )
 
@@ -16,25 +17,36 @@ type CalendarEvent struct {
 }
 
 type Calendar struct {
-	calendar *iCal.Calendar
+	Name            string
+	Color           string
+	RefreshInterval string
+	calendar        *iCal.Calendar
 }
 
-func (c *Calendar) CreateCalendar(name string) {
+func (c *Calendar) CreateCalendar() {
+	log.Printf("create calendar: %s", c.Name)
+
 	c.calendar = iCal.NewCalendar()
 	c.calendar.SetMethod(iCal.MethodPublish)
-	c.calendar.SetName(name)
+	c.calendar.SetName(c.Name)
+	c.calendar.SetColor(c.Color)
+	c.calendar.SetRefreshInterval(c.RefreshInterval)
+
+	log.Printf("calendar created")
 }
 
 func (c *Calendar) CreateEvent(event CalendarEvent) {
-	e := c.calendar.AddEvent(event.Id)
+	log.Printf("create event: %s", event.Summary)
 
+	e := c.calendar.AddEvent(event.Id)
 	e.SetCreatedTime(time.Now())
+	e.SetDtStampTime(time.Now())
 	e.SetStartAt(event.StartAt)
 	e.SetEndAt(event.EndAt)
 	e.SetSummary(event.Summary)
 	e.SetDescription(event.Description)
 	e.SetLocation(event.Location)
-	e.SetURL(event.URL)
+
 }
 
 func (c *Calendar) GetCalendar() *iCal.Calendar {

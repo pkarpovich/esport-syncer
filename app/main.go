@@ -5,8 +5,26 @@ import (
 	. "github.com/pkarpovich/esport-syncer/app/providers"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
+
+const (
+	TeamSpiritId           = "6224"
+	DefaultCalendarName    = "Esport matches"
+	DefaultCalendarColor   = "red"
+	DefaultRefreshInterval = "P1D"
+	DefaultPort            = "1710"
+)
+
+func GetEnvOrDefault(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+
+	return value
+}
 
 type Context struct {
 	Provider Provider
@@ -15,23 +33,26 @@ type Context struct {
 }
 
 func (ctx *Context) UpdateMatches() {
+	log.Printf("try to fetch matches")
+
 	err, matches := ctx.Provider.GetMatches()
 	if err != nil {
 		log.Fatalf("error while getting matches: %v", err)
 	}
 
 	ctx.Matches = matches
+	log.Printf("matches fetched: %d", len(matches))
 }
 
 func (ctx *Context) InitCalendarEvents() {
-	ctx.Calendar.CreateCalendar("Esport matches")
+	ctx.Calendar.CreateCalendar()
 
 	for _, match := range ctx.Matches {
 		ctx.Calendar.CreateEvent(matchToCalendarEvent(match))
 	}
 }
 
-func (ctx *Context) ServeCalendar(w http.ResponseWriter, r *http.Request) {
+func (ctx *Context) ServeCalendar(w http.ResponseWriter, _ *http.Request) {
 	headers := w.Header()
 	headers.Add("Content-Type", "text/calendar")
 	headers.Add("Content-Disposition", "attachment; filename=calendar.ics")
@@ -47,8 +68,7 @@ func matchToCalendarEvent(match Match) CalendarEvent {
 		Id:          match.Id,
 		Summary:     fmt.Sprintf("%s vs %s", match.Team1, match.Team2),
 		Description: fmt.Sprintf("Tournament: %s | Result: %s", match.Tournament, match.Score),
-		Location:    "Online",
-		URL:         "https://ggscore.com/en/dota-2",
+		Location:    match.URL,
 		StartAt:     match.Time,
 		EndAt:       match.Time.Add(2 * time.Hour),
 	}
@@ -56,14 +76,23 @@ func matchToCalendarEvent(match Match) CalendarEvent {
 
 func main() {
 	ctx := Context{
-		Provider: &DotaProvider{TeamID: "6224"},
-		Calendar: Calendar{},
+		Provider: &DotaProvider{TeamID: GetEnvOrDefault("TEAM_ID", TeamSpiritId)},
+		Calendar: Calendar{
+			Name:            GetEnvOrDefault("CALENDAR_NAME", DefaultCalendarName),
+			Color:           GetEnvOrDefault("CALENDAR_COLOR", DefaultCalendarColor),
+			RefreshInterval: GetEnvOrDefault("CALENDAR_REFRESH_INTERVAL", DefaultRefreshInterval),
+		},
 	}
 	ctx.UpdateMatches()
 	ctx.InitCalendarEvents()
 
 	http.HandleFunc("/calendar.ics", ctx.ServeCalendar)
 
-	fmt.Printf("Calendar published at http://localhost:1710/calendar.ics\n")
-	http.ListenAndServe(":1710", nil)
+	port := GetEnvOrDefault("PORT", DefaultPort)
+
+	log.Printf("Calendar published at http://localhost:%s/calendar.ics\n", port)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+	if err != nil {
+		log.Fatalf("error while starting server : %v", err)
+	}
 }
