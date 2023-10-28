@@ -79,7 +79,10 @@ func main() {
 	s := gocron.NewScheduler(time.UTC)
 
 	ctx := Context{
-		Provider: &DotaProvider{TeamID: GetEnvOrDefault("TEAM_ID", TeamSpiritId)},
+		Provider: &PandaScoreProvider{
+			TeamID: GetEnvOrDefault("PANDASCORE_TEAM_ID", TeamSpiritId),
+			ApiKey: GetEnvOrDefault("PANDASCORE_API_KEY", ""),
+		},
 		Calendar: Calendar{
 			Name:            GetEnvOrDefault("CALENDAR_NAME", DefaultCalendarName),
 			Color:           GetEnvOrDefault("CALENDAR_COLOR", DefaultCalendarColor),
