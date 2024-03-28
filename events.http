@@ -1,0 +1,8 @@
+# Check the health of the service
+GET http://localhost:1710/health
+Accept: application/json
+
+###
+
+# Get calendar file
+GET http://localhost:1710/calendar.ics

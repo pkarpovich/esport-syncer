@@ -41,34 +41,34 @@ type TeamMatch struct {
 	} `json:"streams_list"`
 }
 
-func (p *PandaScoreProvider) GetMatches() (error, []Match) {
+func (p *PandaScoreProvider) GetMatches() ([]Match, error) {
 	url := fmt.Sprintf("%s?filter[opponent_id]=%s", BaseProviderUrl, p.TeamID)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return fmt.Errorf("error while creating request: %w", err), nil
+		return nil, fmt.Errorf("error while creating request: %w", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", p.ApiKey))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error while sending request: %w", err), nil
+		return nil, fmt.Errorf("error while sending request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("error while reading response body: %w", err), nil
+		return nil, fmt.Errorf("error while reading response body: %w", err)
 	}
 
 	var teamMatches []TeamMatch
 	err = json.Unmarshal(body, &teamMatches)
 	if err != nil {
-		return fmt.Errorf("error while parsing response body: %w", err), nil
+		return nil, fmt.Errorf("error while parsing response body: %w", err)
 	}
 
-	return nil, ProcessMatches(teamMatches)
+	return ProcessMatches(teamMatches), nil
 }
 
 func ProcessMatches(providerMatches []TeamMatch) []Match {

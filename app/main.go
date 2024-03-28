@@ -36,7 +36,7 @@ type Context struct {
 func (ctx *Context) UpdateMatches() {
 	log.Printf("try to fetch matches")
 
-	err, matches := ctx.Provider.GetMatches()
+	matches, err := ctx.Provider.GetMatches()
 	if err != nil {
 		log.Fatalf("error while getting matches: %v", err)
 	}
@@ -59,6 +59,22 @@ func (ctx *Context) ServeCalendar(w http.ResponseWriter, _ *http.Request) {
 	headers.Add("Content-Disposition", "attachment; filename=calendar.ics")
 
 	_, err := fmt.Fprintf(w, ctx.Calendar.PublishCalendar())
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func (ctx *Context) HealthCheck(w http.ResponseWriter, _ *http.Request) {
+	events, err := ctx.Provider.GetMatches()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	headers := w.Header()
+	headers.Add("Content-Type", "application/json")
+
+	_, err = fmt.Fprintf(w, `{"msg": "OK", "events": %d}`, len(events))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -104,6 +120,7 @@ func main() {
 	s.StartAsync()
 
 	http.HandleFunc("/calendar.ics", ctx.ServeCalendar)
+	http.HandleFunc("/health", ctx.HealthCheck)
 
 	port := GetEnvOrDefault("PORT", DefaultPort)
 

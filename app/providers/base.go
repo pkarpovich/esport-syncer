@@ -15,5 +15,5 @@ type Match struct {
 }
 
 type Provider interface {
-	GetMatches() (error, []Match)
+	GetMatches() ([]Match, error)
 }
