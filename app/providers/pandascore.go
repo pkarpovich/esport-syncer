@@ -30,8 +30,11 @@ type TeamMatch struct {
 		Id   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"league"`
-	BeginAt time.Time `json:"begin_at"`
-	Results []struct {
+	BeginAt     time.Time `json:"begin_at"`
+	ScheduledAt time.Time `json:"scheduled_at"`
+	ModifiedAt  time.Time `json:"modified_at"`
+	BestOf      int       `json:"number_of_games"`
+	Results     []struct {
 		Score  int `json:"score"`
 		TeamID int `json:"team_id"`
 	}
@@ -81,7 +84,9 @@ func ProcessMatches(providerMatches []TeamMatch) []Match {
 		match.Tournament = providerMatch.League.Name
 		match.Team1 = providerMatch.Opponents[0].Opponent.Name
 		match.Team2 = providerMatch.Opponents[1].Opponent.Name
-		match.Time = providerMatch.BeginAt
+		match.BestOf = providerMatch.BestOf
+		match.Time = providerMatch.ScheduledAt
+		match.ModifiedAt = providerMatch.ModifiedAt
 		match.IsLive = providerMatch.Status == "running"
 		match.Score = fmt.Sprintf("(%d-%d)", providerMatch.Results[0].Score, providerMatch.Results[1].Score)
 		match.URL = providerMatch.StreamsList[0].RawURL

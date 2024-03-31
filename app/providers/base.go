@@ -9,9 +9,11 @@ type Match struct {
 	Team2      string
 	Score      string
 	Time       time.Time
+	BestOf     int
 	Location   string
 	URL        string
 	IsLive     bool
+	ModifiedAt time.Time
 }
 
 type Provider interface {

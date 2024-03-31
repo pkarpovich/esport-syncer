@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - ${PORT}:${PORT}
+    volumes:
+      - .db:/srv/.db
     environment:
       PANDASCORE_TEAM_ID: ${PANDASCORE_TEAM_ID}
       PANDASCORE_API_KEY: ${PANDASCORE_API_KEY}
