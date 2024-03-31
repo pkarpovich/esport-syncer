@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - ${PORT}:${PORT}
+    expose:
+      - ${PORT}
     volumes:
       - .db:/srv/.db
     environment:
@@ -14,3 +16,13 @@ services:
       CALENDAR_COLOR: ${CALENDAR_COLOR}
       CALENDAR_REFRESH_INTERVAL: ${CALENDAR_REFRESH_INTERVAL}
       PORT: ${PORT}
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.esport-syncer.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.esport-syncer.entrypoints=web-secure"
+
+networks:
+  proxy:
+    external: true
