@@ -11,7 +11,7 @@ type Client struct {
 
 func NewClient() *Client {
 	return &Client{
-		Scheduler: gocron.NewScheduler(time.UTC),
+		Scheduler: gocron.NewScheduler(time.Local),
 	}
 }
 

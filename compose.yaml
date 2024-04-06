@@ -8,7 +8,7 @@ services:
     expose:
       - ${PORT}
     volumes:
-      - .db:/srv/.db
+      - .db:/bin/.db
     environment:
       PANDASCORE_TEAM_ID: ${PANDASCORE_TEAM_ID}
       PANDASCORE_API_KEY: ${PANDASCORE_API_KEY}

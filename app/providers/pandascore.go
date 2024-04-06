@@ -68,7 +68,8 @@ func (p *PandaScoreProvider) GetMatches() ([]Match, error) {
 	var teamMatches []TeamMatch
 	err = json.Unmarshal(body, &teamMatches)
 	if err != nil {
-		return nil, fmt.Errorf("error while parsing response body: %w", err)
+		bodyStr := string(body)
+		return nil, fmt.Errorf("error while unmarshalling response body: %w, body: %s", err, bodyStr)
 	}
 
 	return ProcessMatches(teamMatches), nil
