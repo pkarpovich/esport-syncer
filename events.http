@@ -1,15 +1,15 @@
 # Check the health of the service
-GET http://localhost:1710/health
+GET {{url}}/health
 Accept: application/json
 
 ###
 
 # Get calendar file
-GET http://localhost:1710/calendar.ics
+GET {{url}}/calendar.ics
 
 ###
 
 # Refresh events
-POST http://localhost:1710/refresh
+POST {{url}}/refresh
 Content-Type: application/json
-App-Token: super-secret-token
+App-Token: wTest100*
