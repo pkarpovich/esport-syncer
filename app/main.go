@@ -71,5 +71,5 @@ func (ctx *Context) handleSync() {
 	}
 
 	_, nextRun := ctx.Scheduler.NextRun()
-	log.Printf("[INFO] cron job finished, next run at %s", nextRun.UTC())
+	log.Printf("[INFO] cron job finished, next run at %s", nextRun.Local())
 }
