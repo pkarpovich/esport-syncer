@@ -23,7 +23,7 @@ func Start(provider providers.Provider, events *events.Repository) error {
 		}
 
 		summary := fmt.Sprintf("%s vs %s", match.Team1, match.Team2)
-		startAt := match.Time.Format("2006-01-02 15:04:05")
+		startAt := match.Time.Local().Format("2006-01-02 15:04:05")
 		log.Printf("[INFO] create or replace event: %s at %s", summary, startAt)
 	}
 
