@@ -16,7 +16,8 @@ type Config struct {
 		Color           string `env:"CALENDAR_COLOR" env-default:"red"`
 		RefreshInterval string `env:"CALENDAR_REFRESH_INTERVAL" env-default:"P1D"`
 	}
-	Port string `env:"PORT" env-default:"1710"`
+	Port   string `env:"PORT" env-default:"1710"`
+	Secret string `env:"SECRET_KEY"`
 }
 
 func Init() (*Config, error) {

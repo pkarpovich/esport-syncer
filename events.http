@@ -6,3 +6,10 @@ Accept: application/json
 
 # Get calendar file
 GET http://localhost:1710/calendar.ics
+
+###
+
+# Refresh events
+POST http://localhost:1710/refresh
+Content-Type: application/json
+App-Token: super-secret-token
