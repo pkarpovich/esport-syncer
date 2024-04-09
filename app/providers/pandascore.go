@@ -3,6 +3,7 @@ package providers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ybbus/httpretry"
 	"io"
 	"net/http"
 	"strconv"
@@ -53,13 +54,25 @@ func (p *PandaScoreProvider) GetMatches() ([]Match, error) {
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", p.ApiKey))
 
-	client := &http.Client{}
+	client := httpretry.NewDefaultClient(
+		httpretry.WithMaxRetryCount(5),
+		httpretry.WithBackoffPolicy(func(attemptCount int) time.Duration {
+			return time.Duration(attemptCount) * time.Minute
+		}),
+		httpretry.WithRetryPolicy(func(statusCode int, err error) bool {
+			return err != nil || statusCode != http.StatusOK
+		}),
+	)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error while sending request: %w", err)
 	}
-	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error while sending request: status code: %d", resp.StatusCode)
+	}
+
+	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error while reading response body: %w", err)

@@ -7,6 +7,7 @@ require (
 	github.com/go-co-op/gocron v1.37.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/joho/godotenv v1.5.1
+	github.com/ybbus/httpretry v1.0.2
 	modernc.org/sqlite v1.29.5
 )
 
