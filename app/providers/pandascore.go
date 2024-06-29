@@ -97,12 +97,22 @@ func ProcessMatches(providerMatches []TeamMatch) []Match {
 		match.Id = strconv.Itoa(providerMatch.Id)
 		match.Tournament = providerMatch.League.Name
 		match.Team1 = providerMatch.Opponents[0].Opponent.Name
-		match.Team2 = providerMatch.Opponents[1].Opponent.Name
+
+		match.Team2 = "TBD"
+		if len(providerMatch.Opponents) == 2 {
+			match.Team2 = providerMatch.Opponents[1].Opponent.Name
+		}
+
 		match.BestOf = providerMatch.BestOf
 		match.Time = providerMatch.ScheduledAt
 		match.ModifiedAt = providerMatch.ModifiedAt
 		match.IsLive = providerMatch.Status == "running"
-		match.Score = fmt.Sprintf("(%d-%d)", providerMatch.Results[0].Score, providerMatch.Results[1].Score)
+
+		match.Score = "(0-0)"
+		if len(providerMatch.Results) == 2 {
+			match.Score = fmt.Sprintf("(%d-%d)", providerMatch.Results[0].Score, providerMatch.Results[1].Score)
+		}
+
 		match.URL = providerMatch.StreamsList[0].RawURL
 		for _, stream := range providerMatch.StreamsList {
 			if stream.Language == "ru" {
