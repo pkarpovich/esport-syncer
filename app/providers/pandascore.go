@@ -17,32 +17,42 @@ type PandaScoreProvider struct {
 	ApiKey string
 }
 
+type Stream struct {
+	Language string `json:"language"`
+	RawURL   string `json:"raw_url"`
+}
+
+type Result struct {
+	Score  int `json:"score"`
+	TeamID int `json:"team_id"`
+}
+
+type Opponent struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type OpponentList struct {
+	Opponent Opponent `json:"opponent"`
+}
+
+type League struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 type TeamMatch struct {
-	Id        int    `json:"id"`
-	Name      string `json:"name"`
-	Status    string `json:"status"`
-	Opponents []struct {
-		Opponent struct {
-			Id   int    `json:"id"`
-			Name string `json:"name"`
-		} `json:"opponent"`
-	} `json:"opponents"`
-	League struct {
-		Id   int    `json:"id"`
-		Name string `json:"name"`
-	} `json:"league"`
-	BeginAt     time.Time `json:"begin_at"`
-	ScheduledAt time.Time `json:"scheduled_at"`
-	ModifiedAt  time.Time `json:"modified_at"`
-	BestOf      int       `json:"number_of_games"`
-	Results     []struct {
-		Score  int `json:"score"`
-		TeamID int `json:"team_id"`
-	}
-	StreamsList []struct {
-		Language string `json:"language"`
-		RawURL   string `json:"raw_url"`
-	} `json:"streams_list"`
+	Id           int            `json:"id"`
+	Name         string         `json:"name"`
+	Status       string         `json:"status"`
+	OpponentList []OpponentList `json:"opponents"`
+	League       League         `json:"league"`
+	BeginAt      time.Time      `json:"begin_at"`
+	ScheduledAt  time.Time      `json:"scheduled_at"`
+	ModifiedAt   time.Time      `json:"modified_at"`
+	BestOf       int            `json:"number_of_games"`
+	Results      []Result       `json:"results"`
+	StreamsList  []Stream       `json:"streams_list"`
 }
 
 func (p *PandaScoreProvider) GetMatches() ([]Match, error) {
@@ -72,7 +82,12 @@ func (p *PandaScoreProvider) GetMatches() ([]Match, error) {
 		return nil, fmt.Errorf("error while sending request: status code: %d", resp.StatusCode)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Printf("error while closing response body: %v", err)
+		}
+	}()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error while reading response body: %w", err)
@@ -94,34 +109,51 @@ func ProcessMatches(providerMatches []TeamMatch) []Match {
 	for _, providerMatch := range providerMatches {
 		var match Match
 
+		team1, team2 := getTeams(providerMatch.OpponentList)
+
 		match.Id = strconv.Itoa(providerMatch.Id)
 		match.Tournament = providerMatch.League.Name
-		match.Team1 = providerMatch.Opponents[0].Opponent.Name
-
-		match.Team2 = "TBD"
-		if len(providerMatch.Opponents) == 2 {
-			match.Team2 = providerMatch.Opponents[1].Opponent.Name
-		}
-
+		match.Team1 = team1
+		match.Team2 = team2
 		match.BestOf = providerMatch.BestOf
 		match.Time = providerMatch.ScheduledAt
 		match.ModifiedAt = providerMatch.ModifiedAt
 		match.IsLive = providerMatch.Status == "running"
-
-		match.Score = "(0-0)"
-		if len(providerMatch.Results) == 2 {
-			match.Score = fmt.Sprintf("(%d-%d)", providerMatch.Results[0].Score, providerMatch.Results[1].Score)
-		}
-
-		match.URL = providerMatch.StreamsList[0].RawURL
-		for _, stream := range providerMatch.StreamsList {
-			if stream.Language == "ru" {
-				match.URL = stream.RawURL
-			}
-		}
+		match.Score = getScore(providerMatch.Results)
+		match.URL = getStreamURL(providerMatch.StreamsList)
 
 		matches = append(matches, match)
 	}
 
 	return matches
+}
+
+func getStreamURL(streams []Stream) string {
+	for _, stream := range streams {
+		if stream.Language == "ru" {
+			return stream.RawURL
+		}
+	}
+
+	if len(streams) > 0 {
+		return streams[0].RawURL
+	}
+
+	return ""
+}
+
+func getScore(results []Result) string {
+	if len(results) == 2 {
+		return fmt.Sprintf("(%d-%d)", results[0].Score, results[1].Score)
+	}
+
+	return "(0-0)"
+}
+
+func getTeams(opponents []OpponentList) (string, string) {
+	if len(opponents) == 2 {
+		return opponents[0].Opponent.Name, opponents[1].Opponent.Name
+	}
+
+	return opponents[0].Opponent.Name, "TBD"
 }
