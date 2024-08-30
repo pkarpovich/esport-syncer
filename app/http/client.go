@@ -5,21 +5,31 @@ import (
 	"github.com/pkarpovich/esport-syncer/app/config"
 	"github.com/pkarpovich/esport-syncer/app/events"
 	"github.com/pkarpovich/esport-syncer/app/providers"
+	"github.com/pkarpovich/esport-syncer/app/sync"
 	"log"
 	"net/http"
 )
 
 type Client struct {
-	Provider providers.Provider
-	Events   *events.Repository
-	Config   *config.Config
+	Provider   providers.Provider
+	Events     *events.Repository
+	Config     *config.Config
+	SyncConfig []sync.ConfigItem
 }
 
-func NewClient(cfg *config.Config, events *events.Repository, provider providers.Provider) *Client {
+type ClientOptions struct {
+	Provider   providers.Provider
+	Events     *events.Repository
+	SyncConfig []sync.ConfigItem
+	Config     *config.Config
+}
+
+func NewClient(opt ClientOptions) *Client {
 	return &Client{
-		Provider: provider,
-		Events:   events,
-		Config:   cfg,
+		SyncConfig: opt.SyncConfig,
+		Provider:   opt.Provider,
+		Events:     opt.Events,
+		Config:     opt.Config,
 	}
 }
 

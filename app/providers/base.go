@@ -13,9 +13,11 @@ type Match struct {
 	Location   string
 	URL        string
 	IsLive     bool
+	TeamId     int
+	GameType   string
 	ModifiedAt time.Time
 }
 
 type Provider interface {
-	GetMatches() ([]Match, error)
+	GetMatches(teamID int, discipline string) ([]Match, error)
 }

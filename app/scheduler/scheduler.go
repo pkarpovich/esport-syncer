@@ -15,8 +15,8 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) Start(jobFun interface{}) error {
-	_, err := c.Scheduler.Cron("0 */8 * * *").StartImmediately().Do(jobFun)
+func (c *Client) Start(jobFun interface{}, params ...interface{}) error {
+	_, err := c.Scheduler.Cron("0 */8 * * *").StartImmediately().Do(jobFun, params...)
 	if err != nil {
 		return err
 	}

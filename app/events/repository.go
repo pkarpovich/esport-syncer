@@ -21,6 +21,8 @@ func NewRepository(db *database.Client) (*Repository, error) {
     		location TEXT,
     		url TEXT,
     		is_live BOOLEAN,
+    		team_id INTEGER
+            game_type TEXT
             modified_at TIMESTAMP
 	)`)
 	if err != nil {
@@ -42,8 +44,10 @@ func (r *Repository) CreateOrReplace(event providers.Match) error {
                     location,
                     url,
                     is_live,
+					team_id,
+					game_type,
 					modified_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		event.Id,
 		event.Tournament,
 		event.Team1,
@@ -54,6 +58,8 @@ func (r *Repository) CreateOrReplace(event providers.Match) error {
 		event.Location,
 		event.URL,
 		event.IsLive,
+		event.TeamId,
+		event.GameType,
 		event.ModifiedAt,
 	)
 
@@ -72,6 +78,8 @@ func (r *Repository) GetAll() ([]providers.Match, error) {
 					location,
 					url,
 					is_live,
+    				team_id,
+    				game_type,
 					modified_at
 					FROM events`)
 	if err != nil {
@@ -98,6 +106,8 @@ func (r *Repository) GetAll() ([]providers.Match, error) {
 			&event.Location,
 			&event.URL,
 			&event.IsLive,
+			&event.TeamId,
+			&event.GameType,
 			&event.ModifiedAt,
 		)
 		if err != nil {

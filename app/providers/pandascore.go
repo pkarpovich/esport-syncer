@@ -10,10 +10,9 @@ import (
 	"time"
 )
 
-const BaseProviderUrl = "https://api.pandascore.co/dota2/matches"
+const BaseProviderUrl = "https://api.pandascore.co"
 
 type PandaScoreProvider struct {
-	TeamID string
 	ApiKey string
 }
 
@@ -55,8 +54,8 @@ type TeamMatch struct {
 	StreamsList  []Stream       `json:"streams_list"`
 }
 
-func (p *PandaScoreProvider) GetMatches() ([]Match, error) {
-	url := fmt.Sprintf("%s?filter[opponent_id]=%s", BaseProviderUrl, p.TeamID)
+func (p *PandaScoreProvider) GetMatches(teamID int, discipline string) ([]Match, error) {
+	url := fmt.Sprintf("%s/%s/matches?filter[opponent_id]=%d", BaseProviderUrl, discipline, teamID)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -100,10 +99,10 @@ func (p *PandaScoreProvider) GetMatches() ([]Match, error) {
 		return nil, fmt.Errorf("error while unmarshalling response body: %w, body: %s", err, bodyStr)
 	}
 
-	return ProcessMatches(teamMatches), nil
+	return ProcessMatches(teamMatches, teamID, discipline), nil
 }
 
-func ProcessMatches(providerMatches []TeamMatch) []Match {
+func ProcessMatches(providerMatches []TeamMatch, teamID int, discipline string) []Match {
 	matches := make([]Match, 0)
 
 	for _, providerMatch := range providerMatches {
@@ -121,6 +120,8 @@ func ProcessMatches(providerMatches []TeamMatch) []Match {
 		match.IsLive = providerMatch.Status == "running"
 		match.Score = getScore(providerMatch.Results)
 		match.URL = getStreamURL(providerMatch.StreamsList)
+		match.TeamId = teamID
+		match.GameType = discipline
 
 		matches = append(matches, match)
 	}

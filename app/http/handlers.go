@@ -62,7 +62,7 @@ func (c *Client) RefreshEvents(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	headers.Add("Content-Type", "application/json")
 
-	err := sync.Start(c.Provider, c.Events)
+	err := sync.Start(c.Provider, c.Events, c.SyncConfig)
 	if err != nil {
 		log.Printf("[ERROR] error while refreshing events: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
