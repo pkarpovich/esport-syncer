@@ -9,6 +9,7 @@ services:
       - ${PORT}
     volumes:
       - .db:/bin/.db
+      - .config:/bin/.config
     environment:
       PANDASCORE_TEAM_ID: ${PANDASCORE_TEAM_ID}
       PANDASCORE_API_KEY: ${PANDASCORE_API_KEY}
@@ -16,6 +17,7 @@ services:
       CALENDAR_COLOR: ${CALENDAR_COLOR}
       CALENDAR_REFRESH_INTERVAL: ${CALENDAR_REFRESH_INTERVAL}
       SECRET_KEY: ${SECRET_KEY}
+      CONFIG_PATH: /bin/.config/syncConfig.json
       PORT: ${PORT}
     networks:
       - proxy
