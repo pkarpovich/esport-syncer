@@ -1,20 +1,33 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/pkarpovich/esport-syncer/app/calendar"
 	"github.com/pkarpovich/esport-syncer/app/events"
+	"github.com/pkarpovich/esport-syncer/app/providers"
 	"github.com/pkarpovich/esport-syncer/app/sync"
 	"log"
 	"net/http"
 )
 
-func (c *Client) ServeCalendar(w http.ResponseWriter, _ *http.Request) {
+func (c *Client) ServeCalendar(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	headers.Add("Content-Type", "text/calendar")
 	headers.Add("Content-Disposition", "attachment; filename=calendar.ics")
+	id := r.PathValue("id")
 
-	matches, err := c.Events.GetAll()
+	syncConfig := FirstOrDefault[sync.ConfigItem](c.SyncConfig, func(syncConfig *sync.ConfigItem) bool {
+		return syncConfig.Id == id
+	})
+
+	if syncConfig == nil {
+		log.Printf("[ERROR] config ID is not found")
+		http.Error(w, "config ID is not found", http.StatusNotFound)
+		return
+	}
+
+	matches, err := c.Events.GetByTeamId(syncConfig.TeamId, syncConfig.GameType)
 	if err != nil {
 		log.Printf("[ERROR] error while querying events: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -30,6 +43,58 @@ func (c *Client) ServeCalendar(w http.ResponseWriter, _ *http.Request) {
 	_, err = fmt.Fprintf(w, iCal.Serialize())
 	if err != nil {
 		fmt.Println(err)
+	}
+}
+
+type ErrorResponse struct {
+	code    int
+	message string
+}
+
+type GetEventsResponse struct {
+	Data  []providers.Match `json:"data"`
+	Error *ErrorResponse    `json:"error"`
+}
+
+func (c *Client) GetEvents(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	id := r.PathValue("id")
+
+	syncConfig := FirstOrDefault[sync.ConfigItem](c.SyncConfig, func(syncConfig *sync.ConfigItem) bool {
+		return syncConfig.Id == id
+	})
+
+	matches := make([]providers.Match, 0)
+
+	if syncConfig == nil {
+		w.WriteHeader(http.StatusNotFound)
+		err := json.NewEncoder(w).Encode(&GetEventsResponse{
+			Error: &ErrorResponse{
+				code:    http.StatusNotFound,
+				message: "Config ID is not found",
+			},
+			Data: matches,
+		})
+		if err != nil {
+			log.Printf("[ERROR] error while encoding response: %v", err)
+		}
+		return
+	}
+
+	matches, err := c.Events.GetByTeamId(syncConfig.TeamId, syncConfig.GameType)
+	if err != nil {
+		log.Printf("[ERROR] error while querying events: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&GetEventsResponse{
+		Data:  matches,
+		Error: nil,
+	})
+	if err != nil {
+		log.Printf("[ERROR] error while encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -74,4 +139,15 @@ func (c *Client) RefreshEvents(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[ERROR] error while writing response: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func FirstOrDefault[T any](slice []T, filter func(*T) bool) (element *T) {
+
+	for i := 0; i < len(slice); i++ {
+		if filter(&slice[i]) {
+			return &slice[i]
+		}
+	}
+
+	return nil
 }

@@ -1,16 +1,35 @@
 package sync
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/pkarpovich/esport-syncer/app/events"
 	"github.com/pkarpovich/esport-syncer/app/providers"
 	"log"
+	"os"
 )
 
 type ConfigItem struct {
 	Id       string `json:"id"`
 	TeamId   int    `json:"teamId"`
 	GameType string `json:"gameType"`
+}
+
+func GetSyncConfig(localPath string) ([]ConfigItem, error) {
+	bytes, err := os.ReadFile(localPath)
+	if err != nil {
+		log.Printf("[ERROR] error while reading file: %v", err)
+		return nil, err
+	}
+
+	var syncConfig []ConfigItem
+	err = json.Unmarshal(bytes, &syncConfig)
+	if err != nil {
+		log.Printf("[ERROR] error while unmarshalling JSON: %v", err)
+		return nil, err
+	}
+
+	return syncConfig, nil
 }
 
 func Start(provider providers.Provider, events *events.Repository, syncConfig []ConfigItem) error {

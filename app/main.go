@@ -36,22 +36,10 @@ func main() {
 		}
 	}()
 
-	syncConfig := []sync.ConfigItem{
-		{
-			Id:       "4c4d2148-8a6d-42bb-94ea-8725e4b96f26",
-			TeamId:   1669,
-			GameType: "dota2",
-		},
-		{
-			Id:       "7ccc873c-c0a9-4a72-a48e-e88d6e436e26",
-			TeamId:   124523,
-			GameType: "csgo",
-		},
-		{
-			Id:       "e1575b45-06eb-4f0d-8a4c-fe0496e57189",
-			TeamId:   135142,
-			GameType: "mlbb",
-		},
+	syncConfig, err := sync.GetSyncConfig(cfg.ConfigPath)
+	if err != nil {
+		log.Fatalf("[ERROR] error while reading sync config: %v", err)
+		return
 	}
 
 	eventsRepository, err := events.NewRepository(db)

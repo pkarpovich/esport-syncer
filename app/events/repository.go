@@ -3,6 +3,7 @@ package events
 import (
 	"github.com/pkarpovich/esport-syncer/app/database"
 	"github.com/pkarpovich/esport-syncer/app/providers"
+	"log"
 )
 
 type Repository struct {
@@ -111,6 +112,63 @@ func (r *Repository) GetAll() ([]providers.Match, error) {
 			&event.ModifiedAt,
 		)
 		if err != nil {
+			return nil, err
+		}
+
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+func (r *Repository) GetByTeamId(teamID int, gameType string) ([]providers.Match, error) {
+	rows, err := r.db.Query(`SELECT
+					id,
+					tournament,
+					team1,
+					team2,
+					score,
+					best_of,
+					time,
+					location,
+					url,
+					is_live,
+					team_id,
+					game_type,
+					modified_at
+					FROM events WHERE team_id = ? AND game_type = ?`, teamID, gameType)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("[ERROR] error while closing rows: %v", err)
+		}
+	}()
+
+	events := make([]providers.Match, 0)
+
+	for rows.Next() {
+		var event providers.Match
+
+		err := rows.Scan(
+			&event.Id,
+			&event.Tournament,
+			&event.Team1,
+			&event.Team2,
+			&event.Score,
+			&event.BestOf,
+			&event.Time,
+			&event.Location,
+			&event.URL,
+			&event.IsLive,
+			&event.TeamId,
+			&event.GameType,
+			&event.ModifiedAt,
+		)
+		if err != nil {
+			log.Printf("[ERROR] error while scanning rows: %v", err)
 			return nil, err
 		}
 
