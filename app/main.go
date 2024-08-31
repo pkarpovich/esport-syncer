@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/pkarpovich/esport-syncer/app/config"
 	"github.com/pkarpovich/esport-syncer/app/database"
-	"github.com/pkarpovich/esport-syncer/app/events"
 	"github.com/pkarpovich/esport-syncer/app/http"
 	"github.com/pkarpovich/esport-syncer/app/providers"
 	"github.com/pkarpovich/esport-syncer/app/scheduler"
+	"github.com/pkarpovich/esport-syncer/app/store/matches"
 	"github.com/pkarpovich/esport-syncer/app/sync"
 	"log"
 	"time"
@@ -15,7 +15,7 @@ import (
 type Context struct {
 	Config    *config.Config
 	Provider  providers.Provider
-	Events    *events.Repository
+	Events    *match.Repository
 	Scheduler *scheduler.Client
 }
 
@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 
-	eventsRepository, err := events.NewRepository(db)
+	eventsRepository, err := match.NewRepository(db)
 	if err != nil {
 		log.Fatalf("[ERROR] error while creating events repository: %v", err)
 	}

@@ -3,8 +3,8 @@ package http
 import (
 	"fmt"
 	"github.com/pkarpovich/esport-syncer/app/config"
-	"github.com/pkarpovich/esport-syncer/app/events"
 	"github.com/pkarpovich/esport-syncer/app/providers"
+	match "github.com/pkarpovich/esport-syncer/app/store/matches"
 	"github.com/pkarpovich/esport-syncer/app/sync"
 	"log"
 	"net/http"
@@ -12,14 +12,14 @@ import (
 
 type Client struct {
 	Provider   providers.Provider
-	Events     *events.Repository
+	Events     *match.Repository
 	Config     *config.Config
 	SyncConfig []sync.ConfigItem
 }
 
 type ClientOptions struct {
 	Provider   providers.Provider
-	Events     *events.Repository
+	Events     *match.Repository
 	SyncConfig []sync.ConfigItem
 	Config     *config.Config
 }
@@ -41,6 +41,6 @@ func (c *Client) Listen() error {
 	mux.HandleFunc("POST /refresh", c.RefreshEvents)
 	mux.HandleFunc("GET /health", c.HealthCheck)
 
-	log.Printf("[INFO] Calendar published at http://localhost:%s/calendar.ics\n", c.Config.Port)
+	log.Printf("[INFO] Calendars published at http://localhost:%s\n", c.Config.Port)
 	return http.ListenAndServe(fmt.Sprintf(":%s", c.Config.Port), mux)
 }

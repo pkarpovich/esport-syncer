@@ -3,6 +3,7 @@ package providers
 import (
 	"encoding/json"
 	"fmt"
+	match "github.com/pkarpovich/esport-syncer/app/store/matches"
 	"github.com/ybbus/httpretry"
 	"io"
 	"net/http"
@@ -54,7 +55,7 @@ type TeamMatch struct {
 	StreamsList  []Stream       `json:"streams_list"`
 }
 
-func (p *PandaScoreProvider) GetMatches(teamID int, discipline string) ([]Match, error) {
+func (p *PandaScoreProvider) GetMatches(teamID int, discipline string) ([]match.Match, error) {
 	url := fmt.Sprintf("%s/%s/matches?filter[opponent_id]=%d", BaseProviderUrl, discipline, teamID)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -102,28 +103,28 @@ func (p *PandaScoreProvider) GetMatches(teamID int, discipline string) ([]Match,
 	return ProcessMatches(teamMatches, teamID, discipline), nil
 }
 
-func ProcessMatches(providerMatches []TeamMatch, teamID int, discipline string) []Match {
-	matches := make([]Match, 0)
+func ProcessMatches(providerMatches []TeamMatch, teamID int, discipline string) []match.Match {
+	matches := make([]match.Match, 0)
 
 	for _, providerMatch := range providerMatches {
-		var match Match
+		var m match.Match
 
 		team1, team2 := getTeams(providerMatch.OpponentList)
 
-		match.Id = strconv.Itoa(providerMatch.Id)
-		match.Tournament = providerMatch.League.Name
-		match.Team1 = team1
-		match.Team2 = team2
-		match.BestOf = providerMatch.BestOf
-		match.Time = providerMatch.ScheduledAt
-		match.ModifiedAt = providerMatch.ModifiedAt
-		match.IsLive = providerMatch.Status == "running"
-		match.Score = getScore(providerMatch.Results)
-		match.URL = getStreamURL(providerMatch.StreamsList)
-		match.TeamId = teamID
-		match.GameType = discipline
+		m.Id = strconv.Itoa(providerMatch.Id)
+		m.Tournament = providerMatch.League.Name
+		m.Team1 = team1
+		m.Team2 = team2
+		m.BestOf = providerMatch.BestOf
+		m.Time = providerMatch.ScheduledAt
+		m.ModifiedAt = providerMatch.ModifiedAt
+		m.IsLive = providerMatch.Status == "running"
+		m.Score = getScore(providerMatch.Results)
+		m.URL = getStreamURL(providerMatch.StreamsList)
+		m.TeamId = teamID
+		m.GameType = discipline
 
-		matches = append(matches, match)
+		matches = append(matches, m)
 	}
 
 	return matches

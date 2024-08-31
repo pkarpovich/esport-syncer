@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkarpovich/esport-syncer/app/calendar"
-	"github.com/pkarpovich/esport-syncer/app/events"
-	"github.com/pkarpovich/esport-syncer/app/providers"
+	match "github.com/pkarpovich/esport-syncer/app/store/matches"
 	"github.com/pkarpovich/esport-syncer/app/sync"
 	"log"
 	"net/http"
@@ -35,8 +34,8 @@ func (c *Client) ServeCalendar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iCal := calendar.Create(c.Config.Calendar.Name, c.Config.Calendar.Color, c.Config.Calendar.RefreshInterval)
-	for _, match := range matches {
-		event := events.MatchToCalendarEvent(match)
+	for _, m := range matches {
+		event := sync.MatchToCalendarEvent(m)
 		calendar.AddEvent(iCal, event)
 	}
 
@@ -52,8 +51,8 @@ type ErrorResponse struct {
 }
 
 type GetEventsResponse struct {
-	Data  []providers.Match `json:"data"`
-	Error *ErrorResponse    `json:"error"`
+	Data  []match.Match  `json:"data"`
+	Error *ErrorResponse `json:"error"`
 }
 
 func (c *Client) GetEvents(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +63,7 @@ func (c *Client) GetEvents(w http.ResponseWriter, r *http.Request) {
 		return syncConfig.Id == id
 	})
 
-	matches := make([]providers.Match, 0)
+	matches := make([]match.Match, 0)
 
 	if syncConfig == nil {
 		w.WriteHeader(http.StatusNotFound)

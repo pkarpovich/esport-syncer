@@ -3,10 +3,12 @@ package sync
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkarpovich/esport-syncer/app/events"
+	"github.com/pkarpovich/esport-syncer/app/calendar"
 	"github.com/pkarpovich/esport-syncer/app/providers"
+	"github.com/pkarpovich/esport-syncer/app/store/matches"
 	"log"
 	"os"
+	"time"
 )
 
 type ConfigItem struct {
@@ -32,7 +34,7 @@ func GetSyncConfig(localPath string) ([]ConfigItem, error) {
 	return syncConfig, nil
 }
 
-func Start(provider providers.Provider, events *events.Repository, syncConfig []ConfigItem) error {
+func Start(provider providers.Provider, events *match.Repository, syncConfig []ConfigItem) error {
 	for _, item := range syncConfig {
 		matches, err := provider.GetMatches(item.TeamId, item.GameType)
 		if err != nil {
@@ -41,18 +43,31 @@ func Start(provider providers.Provider, events *events.Repository, syncConfig []
 		}
 		log.Printf("[INFO] Fetched %d matches for game type '%s' and team ID %d", len(matches), item.GameType, item.TeamId)
 
-		for _, match := range matches {
-			err := events.CreateOrReplace(match)
+		for _, m := range matches {
+			err := events.CreateOrReplace(m)
 			if err != nil {
 				log.Printf("[ERROR] error while saving match: %v", err)
 				continue
 			}
 
-			summary := fmt.Sprintf("%s vs %s", match.Team1, match.Team2)
-			startAt := match.Time.Local().Format("2006-01-02 15:04:05")
+			summary := fmt.Sprintf("%s vs %s", m.Team1, m.Team2)
+			startAt := m.Time.Local().Format("2006-01-02 15:04:05")
 			log.Printf("[INFO] create or replace event: %s at %s", summary, startAt)
 		}
 	}
 
 	return nil
+}
+
+func MatchToCalendarEvent(match match.Match) calendar.Event {
+	duration := time.Duration(match.BestOf) * time.Hour
+
+	return calendar.Event{
+		Id:          match.Id,
+		Summary:     fmt.Sprintf("%s vs %s", match.Team1, match.Team2),
+		Description: fmt.Sprintf("Tournament: %s | Result: %s", match.Tournament, match.Score),
+		Location:    match.URL,
+		StartAt:     match.Time,
+		EndAt:       match.Time.Add(duration),
+	}
 }
