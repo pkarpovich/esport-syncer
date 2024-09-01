@@ -8,7 +8,7 @@ services:
     expose:
       - ${PORT}
     volumes:
-      - .db:/bin/.db
+      - .db:/.db
       - .config:/bin/.config
     environment:
       PANDASCORE_TEAM_ID: ${PANDASCORE_TEAM_ID}

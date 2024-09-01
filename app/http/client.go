@@ -37,7 +37,7 @@ func (c *Client) Listen() error {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /events/{id}/calendar.ics", c.ServeCalendar)
-	mux.HandleFunc("GET /events/{id}", c.GetEvents)
+	mux.HandleFunc("POST /events", c.GetEvents)
 	mux.HandleFunc("POST /refresh", c.RefreshEvents)
 	mux.HandleFunc("GET /health", c.HealthCheck)
 
