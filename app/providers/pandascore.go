@@ -28,8 +28,10 @@ type Result struct {
 }
 
 type Opponent struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Id      int    `json:"id"`
+	Name    string `json:"name"`
+	Logo    string `json:"image_url"`
+	Acronym string `json:"acronym"`
 }
 
 type OpponentList struct {
@@ -113,15 +115,24 @@ func ProcessMatches(providerMatches []TeamMatch, teamID int, discipline string) 
 
 		m.Id = strconv.Itoa(providerMatch.Id)
 		m.Tournament = providerMatch.League.Name
-		m.Team1 = team1
-		m.Team2 = team2
+		m.Team1 = match.Team{
+			Id:      team1.Id,
+			Name:    team1.Name,
+			Logo:    team1.Logo,
+			Acronym: team1.Acronym,
+		}
+		m.Team2 = match.Team{
+			Id:      team2.Id,
+			Name:    team2.Name,
+			Logo:    team2.Logo,
+			Acronym: team2.Acronym,
+		}
 		m.BestOf = providerMatch.BestOf
 		m.Time = providerMatch.ScheduledAt
 		m.ModifiedAt = providerMatch.ModifiedAt
 		m.IsLive = providerMatch.Status == "running"
 		m.Score = getScore(providerMatch.Results)
 		m.URL = getStreamURL(providerMatch.StreamsList)
-		m.TeamId = teamID
 		m.GameType = discipline
 
 		matches = append(matches, m)
@@ -152,10 +163,10 @@ func getScore(results []Result) string {
 	return "(0-0)"
 }
 
-func getTeams(opponents []OpponentList) (string, string) {
+func getTeams(opponents []OpponentList) (Opponent, Opponent) {
 	if len(opponents) == 2 {
-		return opponents[0].Opponent.Name, opponents[1].Opponent.Name
+		return opponents[0].Opponent, opponents[1].Opponent
 	}
 
-	return opponents[0].Opponent.Name, "TBD"
+	return opponents[0].Opponent, Opponent{Id: 0, Name: "TBD"}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/pkarpovich/esport-syncer/app/calendar"
 	match "github.com/pkarpovich/esport-syncer/app/store/matches"
 	"github.com/pkarpovich/esport-syncer/app/sync"
+	"github.com/pkarpovich/esport-syncer/app/utils"
 	"log"
 	"net/http"
 )
@@ -16,7 +17,7 @@ func (c *Client) ServeCalendar(w http.ResponseWriter, r *http.Request) {
 	headers.Add("Content-Disposition", "attachment; filename=calendar.ics")
 	id := r.PathValue("id")
 
-	syncConfig := FirstOrDefault[sync.ConfigItem](c.SyncConfig, func(syncConfig *sync.ConfigItem) bool {
+	syncConfig := utils.FirstOrDefault[sync.ConfigItem](c.SyncConfig, func(syncConfig *sync.ConfigItem) bool {
 		return syncConfig.Id == id
 	})
 
@@ -72,7 +73,7 @@ func (c *Client) GetEvents(w http.ResponseWriter, r *http.Request) {
 
 	matches := make([]match.Match, 0)
 	for _, id := range req.Ids {
-		syncConfig := FirstOrDefault[sync.ConfigItem](c.SyncConfig, func(syncConfig *sync.ConfigItem) bool {
+		syncConfig := utils.FirstOrDefault[sync.ConfigItem](c.SyncConfig, func(syncConfig *sync.ConfigItem) bool {
 			return syncConfig.Id == id
 		})
 
@@ -152,15 +153,4 @@ func (c *Client) RefreshEvents(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[ERROR] error while writing response: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-func FirstOrDefault[T any](slice []T, filter func(*T) bool) (element *T) {
-
-	for i := 0; i < len(slice); i++ {
-		if filter(&slice[i]) {
-			return &slice[i]
-		}
-	}
-
-	return nil
 }
