@@ -50,7 +50,7 @@ func Start(provider providers.Provider, events *match.Repository, syncConfig []C
 				continue
 			}
 
-			summary := fmt.Sprintf("%s vs %s", m.Team1, m.Team2)
+			summary := fmt.Sprintf("%s vs %s", m.Team1.Name, m.Team2.Name)
 			startAt := m.Time.Local().Format("2006-01-02 15:04:05")
 			log.Printf("[INFO] create or replace event: %s at %s", summary, startAt)
 		}

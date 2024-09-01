@@ -224,7 +224,7 @@ func (r *Repository) GetAllTeams() ([]Team, error) {
 	return teams, nil
 }
 
-func (r *Repository) GetByTeamId(teamID int, gameType string) ([]Match, error) {
+func (r *Repository) GetByTeamId(teamID int, gameType string, after time.Time) ([]Match, error) {
 	teams, err := r.GetAllTeams()
 	if err != nil {
 		return nil, err
@@ -243,7 +243,9 @@ func (r *Repository) GetByTeamId(teamID int, gameType string) ([]Match, error) {
 					is_live,
 					game_type,
 					modified_at
-					FROM events WHERE (team1_id = ? OR team2_id = ?) AND game_type = ?`, teamID, teamID, gameType)
+					FROM events WHERE (team1_id = ? OR team2_id = ?) AND game_type = ? AND time > ?`,
+		teamID, teamID, gameType, after,
+	)
 	if err != nil {
 		return nil, err
 	}

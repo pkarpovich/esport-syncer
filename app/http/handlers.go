@@ -9,6 +9,7 @@ import (
 	"github.com/pkarpovich/esport-syncer/app/utils"
 	"log"
 	"net/http"
+	"time"
 )
 
 func (c *Client) ServeCalendar(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +28,8 @@ func (c *Client) ServeCalendar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	matches, err := c.Events.GetByTeamId(syncConfig.TeamId, syncConfig.GameType)
+	after := time.Now().AddDate(-1, 0, 0)
+	matches, err := c.Events.GetByTeamId(syncConfig.TeamId, syncConfig.GameType, after)
 	if err != nil {
 		log.Printf("[ERROR] error while querying events: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -57,7 +59,8 @@ type GetEventsResponse struct {
 }
 
 type GetEventsRequest struct {
-	Ids []string `json:"ids"`
+	Ids   []string  `json:"ids"`
+	After time.Time `json:"after"`
 }
 
 func (c *Client) GetEvents(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +95,7 @@ func (c *Client) GetEvents(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		teamMatches, err := c.Events.GetByTeamId(syncConfig.TeamId, syncConfig.GameType)
+		teamMatches, err := c.Events.GetByTeamId(syncConfig.TeamId, syncConfig.GameType, req.After)
 		if err != nil {
 			log.Printf("[ERROR] error while querying events: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
