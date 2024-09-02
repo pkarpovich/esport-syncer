@@ -64,7 +64,7 @@ func MatchToCalendarEvent(match match.Match) calendar.Event {
 
 	return calendar.Event{
 		Id:          match.Id,
-		Summary:     fmt.Sprintf("%s vs %s", match.Team1, match.Team2),
+		Summary:     fmt.Sprintf("%s vs %s", match.Team1.Name, match.Team2.Name),
 		Description: fmt.Sprintf("Tournament: %s | Result: %s", match.Tournament, match.Score),
 		Location:    match.URL,
 		StartAt:     match.Time,
